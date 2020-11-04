@@ -2,7 +2,7 @@ import os
 import sys
 import csv
 import json
-import datetime
+from datetime import datetime, timedelta, date
 
 from typing import List, Tuple, Dict, Set
 
@@ -19,6 +19,10 @@ month_map = {
     "Oct": "10",
     "Nov": "11",
     "Dec": "12"
+}
+
+reminder_map = {
+    "Three days before": -3
 }
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
@@ -40,26 +44,46 @@ def write_daily_alert(content):
     with open('build/daily_alerts.json', 'w') as outfile:
         json.dump(content, outfile, indent=2)
 
-def get_range_date(numdays: int)-> List[datetime.datetime]:
-    base = datetime.date.today()
-    date_list = [base + datetime.timedelta(days=x) for x in range(numdays)]
+def date_from_string(value: str)->datetime:
+    return date.fromisoformat(value)
+
+def create_date(year: int, month: int, day: int)->datetime:
+    return date(year, month, day)
+
+def add_days(base: datetime.date, days: int)->datetime:
+    return base + timedelta(days=days)
+
+def get_range_date(base: datetime.date, numdays: int)-> List[datetime]:
+    date_list = [add_days(base, x) for x in range(numdays)]
     return date_list
 
-def init_data(dts: List[datetime.datetime])->Dict[str, object]:
+def init_data(dts: List[datetime])->Dict[str, object]:
     return {d.isoformat(): { "date": d.isoformat(), "weekday": d.isoweekday(), "messages": []} for d in dts}
 
 def populate_events(year: int, events: List, thisdata: Dict[str, object])->Dict[str, object]:
     for event in events:
-        month = month_map[event['Month']]
-        day = event['Day']
-        eventkey = f'{year}-{month}-{day}'
+        month = int(month_map[event['Month']])
+        day = int(event['Day'])
+        date_event_key = create_date(year, month, day)
+        eventkey = date_event_key.isoformat()
         description = event['Description']
         if not eventkey in thisdata:
             continue
         previous: List[str] = thisdata[eventkey]['messages']
         previous.append(description)
+        # Reminder
+        reminder_days = reminder_map[event["Reminder"]]
+        if reminder_days == 0:
+            continue
+        reminder_date_event_key = add_days(date_event_key, reminder_days)
+        reminder_eventkey = reminder_date_event_key.isoformat()
+        if not reminder_eventkey in thisdata:
+            continue
+        previous_reminder: List[str] = thisdata[reminder_eventkey]['messages']
+        previous_reminder.append(f"Reminder: on {event['Day']} {event['Month']}, {description}")
 
-lastest_data = init_data(get_range_date(500))
+start_date = date_from_string("2020-11-01")
+lastest_data = init_data(get_range_date(start_date, 500))
 populate_events(2020, read_events(), lastest_data)
 populate_events(2021, read_events(), lastest_data)
 write_daily_alert({ "results": lastest_data})
