@@ -22,7 +22,18 @@ month_map = {
 }
 
 reminder_map = {
-    "Three days before": -3
+    "None": 0,
+    "Three days before": -3,
+    "A week before": -7
+}
+
+frequency_map = {
+    "Daily": 1,
+    "Weekly": 7,
+    "Fortnightly": 14,
+    "Monthly": 30,
+    "Quaterly": 90,
+    "Yearly": 365
 }
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
@@ -58,7 +69,15 @@ def get_range_date(base: datetime.date, numdays: int)-> List[datetime]:
     return date_list
 
 def init_data(dts: List[datetime])->Dict[str, object]:
-    return {d.isoformat(): { "date": d.isoformat(), "weekday": d.isoweekday(), "messages": []} for d in dts}
+    thisdata = {d.isoformat(): { "date": d.isoformat(), "weekday": d.isoweekday(), "messages": []} for d in dts}
+    # Adds weekdays
+    thisdata["weekdays"] = {
+        1: [d.isoformat() for d in dts if d.isoweekday() == 1],
+        5: [d.isoformat() for d in dts if d.isoweekday() == 5],
+        6: [d.isoformat() for d in dts if d.isoweekday() == 6],
+        7: [d.isoformat() for d in dts if d.isoweekday() == 7]
+    }
+    return thisdata
 
 def populate_events(year: int, events: List, thisdata: Dict[str, object])->Dict[str, object]:
     for event in events:
@@ -73,7 +92,7 @@ def populate_events(year: int, events: List, thisdata: Dict[str, object])->Dict[
         previous.append(description)
         # Reminder
         reminder_days = reminder_map[event["Reminder"]]
-        if reminder_days == 0:
+        if reminder_days >= 0:
             continue
         reminder_date_event_key = add_days(date_event_key, reminder_days)
         reminder_eventkey = reminder_date_event_key.isoformat()
