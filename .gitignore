@@ -204,3 +204,4 @@ zsdoc/data
 
 import-data/
 build/
+.vesta.ini

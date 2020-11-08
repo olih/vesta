@@ -2,9 +2,14 @@ import os
 import sys
 import csv
 import json
+import configparser
 from datetime import datetime, timedelta, date
-
 from typing import List, Tuple, Dict, Set
+
+config = configparser.ConfigParser()
+config.read(".vesta.ini")
+import_data = config['import-data']
+export_data = config['export-data']
 
 month_map = {
     "Jan": "01",
@@ -42,17 +47,17 @@ if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
     sys.exit(1)
 
 def read_events()->List:
-    with open('import-data/Event-Grid view.csv', newline='') as csvfile:
+    with open(import_data.get('event'), newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
 def read_hosehold_tasks()->List:
-    with open('import-data/Household task-Grid view.csv', newline='') as csvfile:
+    with open(import_data.get('task'), newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
 def write_daily_alert(content):
-    with open('build/daily_alerts.json', 'w') as outfile:
+    with open(export_data.get('daily_alerts'), 'w') as outfile:
         json.dump(content, outfile, indent=2)
 
 def date_from_string(value: str)->datetime:
