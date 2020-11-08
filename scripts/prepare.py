@@ -10,6 +10,7 @@ config = configparser.ConfigParser()
 config.read(".vesta.ini")
 import_data = config['import-data']
 export_data = config['export-data']
+export_json = export_data.get('export_json')
 
 month_map = {
     "Jan": "01",
@@ -43,38 +44,50 @@ frequency_map = {
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
     print("This script requires Python 3.5 or higher!")
-    print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
+    print("You are using Python {}.{}.".format(
+        sys.version_info.major, sys.version_info.minor))
     sys.exit(1)
 
-def read_events()->List:
+
+def read_events() -> List:
     with open(import_data.get('event'), newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
-def read_hosehold_tasks()->List:
+
+def read_hosehold_tasks() -> List:
     with open(import_data.get('task'), newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
-def write_daily_alert(content):
-    with open(export_data.get('daily_alerts'), 'w') as outfile:
-        json.dump(content, outfile, indent=2)
 
-def date_from_string(value: str)->datetime:
+def write_daily_alert(items):
+    for k in items:
+        content = items[k]
+        with open(f"{export_json}/alert_{k}.json", 'w') as outfile:
+            json.dump(content, outfile, indent=2)
+
+
+def date_from_string(value: str) -> datetime:
     return date.fromisoformat(value)
 
-def create_date(year: int, month: int, day: int)->datetime:
+
+def create_date(year: int, month: int, day: int) -> datetime:
     return date(year, month, day)
 
-def add_days(base: datetime.date, days: int)->datetime:
+
+def add_days(base: datetime.date, days: int) -> datetime:
     return base + timedelta(days=days)
 
-def get_range_date(base: datetime.date, numdays: int)-> List[datetime]:
+
+def get_range_date(base: datetime.date, numdays: int) -> List[datetime]:
     date_list = [add_days(base, x) for x in range(numdays)]
     return date_list
 
-def init_data(dts: List[datetime])->Dict[str, object]:
-    thisdata = {d.isoformat(): { "date": d.isoformat(), "weekday": d.isoweekday(), "messages": []} for d in dts}
+
+def init_data(dts: List[datetime]) -> Dict[str, object]:
+    thisdata = {d.isoformat(): {"date": d.isoformat(),
+                                "weekday": d.isoweekday(), "messages": []} for d in dts}
     # Adds weekdays
     thisdata["weekdays"] = {
         1: [d.isoformat() for d in dts if d.isoweekday() == 1],
@@ -84,7 +97,8 @@ def init_data(dts: List[datetime])->Dict[str, object]:
     }
     return thisdata
 
-def populate_events(year: int, events: List, thisdata: Dict[str, object])->Dict[str, object]:
+
+def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dict[str, object]:
     for event in events:
         month = int(month_map[event['Month']])
         day = int(event['Day'])
@@ -104,10 +118,12 @@ def populate_events(year: int, events: List, thisdata: Dict[str, object])->Dict[
         if not reminder_eventkey in thisdata:
             continue
         previous_reminder: List[str] = thisdata[reminder_eventkey]['messages']
-        previous_reminder.append(f"Reminder: on {event['Day']} {event['Month']}, {description}")
+        previous_reminder.append(
+            f"Reminder: on {event['Day']} {event['Month']}, {description}")
+
 
 start_date = date_from_string("2020-11-01")
 lastest_data = init_data(get_range_date(start_date, 500))
 populate_events(2020, read_events(), lastest_data)
 populate_events(2021, read_events(), lastest_data)
-write_daily_alert({ "results": lastest_data})
+write_daily_alert(lastest_data)
