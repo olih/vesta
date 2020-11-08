@@ -90,7 +90,11 @@ def get_range_date(base: datetime.date, numdays: int) -> List[datetime]:
 
 def init_data(dts: List[datetime]) -> Dict[str, object]:
     thisdata = {d.isoformat(): {"date": d.isoformat(),
-                                "weekday": d.isoweekday(), "messages": []} for d in dts}
+                                "date-human": d.strftime("%A, %d %B"),
+                                "weekday": d.isoweekday(),
+                                 "events": [],
+                                  "tasks": []
+                                  } for d in dts}
     # Adds weekdays
     thisdata["weekdays"] = {
         1: [d.isoformat() for d in dts if d.isoweekday() == 1],
@@ -121,7 +125,7 @@ def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dic
         description = event['Description']
         if not eventkey in thisdata:
             continue
-        previous: List[str] = thisdata[eventkey]['messages']
+        previous: List[str] = thisdata[eventkey]['events']
         previous.append(create_event(name, description, "event"))
         # Reminder
         reminder_days = reminder_map[event["Reminder"]]
@@ -131,7 +135,7 @@ def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dic
         reminder_eventkey = reminder_date_event_key.isoformat()
         if not reminder_eventkey in thisdata:
             continue
-        previous_reminder: List[str] = thisdata[reminder_eventkey]['messages']
+        previous_reminder: List[str] = thisdata[reminder_eventkey]['events']
         previous_reminder.append( create_event(name, f"Reminder: on {event['Day']} {event['Month']}, {description}", "reminder"))
 
 
