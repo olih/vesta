@@ -3,6 +3,7 @@ import sys
 import csv
 import json
 import configparser
+import re
 from datetime import datetime, timedelta, date
 from typing import List, Tuple, Dict, Set
 
@@ -11,6 +12,8 @@ config.read(".vesta.ini")
 import_data = config['import-data']
 export_data = config['export-data']
 export_json = export_data.get('export_json')
+
+non_std_chars_patt = re.compile(r'[^A-Za-z0-9]')
 
 month_map = {
     "Jan": "01",
@@ -50,13 +53,13 @@ if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
 
 
 def read_events() -> List:
-    with open(import_data.get('event'), newline='') as csvfile:
+    with open(import_data.get('event'), newline='', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
 
-def read_hosehold_tasks() -> List:
-    with open(import_data.get('task'), newline='') as csvfile:
+def read_household_tasks() -> List:
+    with open(import_data.get('task'), newline='', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
@@ -98,17 +101,28 @@ def init_data(dts: List[datetime]) -> Dict[str, object]:
     return thisdata
 
 
+def name_to_id(name: str) -> str:
+    return non_std_chars_patt.sub("-", name.lower())
+
+
+def create_event(name: str, description: str, flags: str):
+    return {"id": name_to_id(name),
+            "description": description,
+            "flags": flags}
+
+
 def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dict[str, object]:
     for event in events:
         month = int(month_map[event['Month']])
         day = int(event['Day'])
         date_event_key = create_date(year, month, day)
         eventkey = date_event_key.isoformat()
+        name =event['Name']
         description = event['Description']
         if not eventkey in thisdata:
             continue
         previous: List[str] = thisdata[eventkey]['messages']
-        previous.append(description)
+        previous.append(create_event(name, description, "event"))
         # Reminder
         reminder_days = reminder_map[event["Reminder"]]
         if reminder_days >= 0:
@@ -118,8 +132,7 @@ def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dic
         if not reminder_eventkey in thisdata:
             continue
         previous_reminder: List[str] = thisdata[reminder_eventkey]['messages']
-        previous_reminder.append(
-            f"Reminder: on {event['Day']} {event['Month']}, {description}")
+        previous_reminder.append( create_event(name, f"Reminder: on {event['Day']} {event['Month']}, {description}", "reminder"))
 
 
 start_date = date_from_string("2020-11-01")
