@@ -89,12 +89,14 @@ def get_range_date(base: datetime.date, numdays: int) -> List[datetime]:
 
 
 def init_data(dts: List[datetime]) -> Dict[str, object]:
-    thisdata = {d.isoformat(): {"date": d.isoformat(),
-                                "date-human": d.strftime("%A, %d %B"),
-                                "weekday": d.isoweekday(),
-                                 "events": [],
-                                  "tasks": []
-                                  } for d in dts}
+    thisdata = {d.isoformat(): {
+        "date": d.isoformat(),
+        "date-human": d.strftime("%A, %d %B"),
+        "weekday": d.isoweekday(),
+        "events": [],
+        "casual_tasks": []
+    }
+        for d in dts}
     # Adds weekdays
     thisdata["weekdays"] = {
         1: [d.isoformat() for d in dts if d.isoweekday() == 1],
@@ -114,6 +116,11 @@ def create_event(name: str, description: str, flags: str):
             "description": description,
             "flags": flags}
 
+def create_task(name: str, description: str, flags: str):
+    return {"id": name_to_id(name),
+            "description": description,
+            "flags": flags}
+
 
 def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dict[str, object]:
     for event in events:
@@ -121,7 +128,7 @@ def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dic
         day = int(event['Day'])
         date_event_key = create_date(year, month, day)
         eventkey = date_event_key.isoformat()
-        name =event['Name']
+        name = event['Name']
         description = event['Description']
         if not eventkey in thisdata:
             continue
@@ -136,11 +143,29 @@ def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dic
         if not reminder_eventkey in thisdata:
             continue
         previous_reminder: List[str] = thisdata[reminder_eventkey]['events']
-        previous_reminder.append( create_event(name, f"Reminder: on {event['Day']} {event['Month']}, {description}", "reminder"))
+        previous_reminder.append(create_event(
+            name, f"Reminder: on {event['Day']} {event['Month']}, {description}", "reminder"))
+
+
+def populate_daily_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
+    daily_tasks = [create_task(t['Name'], t['Description'], t['Frequency']) for t in tasks]
+    for k in thisdata:
+        bucket = thisdata[k]
+        if not "casual_tasks" in bucket:
+            continue
+        casual_tasks: List = bucket['casual_tasks']
+        casual_tasks.extend(daily_tasks)
+
+
+def populate_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
+    populate_daily_tasks(
+        year, [t for t in tasks if t['Frequency'] == "Daily"], thisdata)
 
 
 start_date = date_from_string("2020-11-01")
 lastest_data = init_data(get_range_date(start_date, 500))
 populate_events(2020, read_events(), lastest_data)
 populate_events(2021, read_events(), lastest_data)
+populate_tasks(2020, read_household_tasks(), lastest_data)
+
 write_daily_alert(lastest_data)
