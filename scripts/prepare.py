@@ -36,13 +36,12 @@ reminder_map = {
     "A week before": -7
 }
 
-frequency_map = {
-    "Daily": 1,
-    "Weekly": 7,
-    "Fortnightly": 14,
-    "Monthly": 30,
-    "Quaterly": 90,
-    "Yearly": 365
+frequency_week_map = {
+    "Weekly": 1,
+    "Fortnightly": 2,
+    "Monthly": 4,
+    "Quaterly": 12,
+    "Yearly": 52
 }
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
@@ -156,10 +155,25 @@ def populate_daily_tasks(year: int, tasks: List, thisdata: Dict[str, object]) ->
         casual_tasks: List = bucket['casual_tasks']
         casual_tasks.extend(daily_tasks)
 
+def populate_regular_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
+    weekly_tasks = [create_task(t['Name'], t['Description'], t['Frequency']) for t in tasks]
+    for k in thisdata:
+        bucket = thisdata[k]
+        if not "casual_tasks" in bucket:
+            continue
+        if bucket['weekday'] is not 1:
+            continue
+        casual_tasks: List = bucket['casual_tasks']
+        casual_tasks.extend(weekly_tasks)
+
 
 def populate_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
     populate_daily_tasks(
         year, [t for t in tasks if t['Frequency'] == "Daily"], thisdata)
+    populate_regular_tasks(
+        year, [t for t in tasks if t['Frequency'] == "Weekly"], thisdata)
+    populate_regular_tasks(
+        year, [t for t in tasks if t['Frequency'] == "Fortnightly"], thisdata)
 
 
 start_date = date_from_string("2020-11-01")
