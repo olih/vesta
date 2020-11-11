@@ -44,6 +44,14 @@ frequency_week_map = {
     "Yearly": 52
 }
 
+frequency_section_map = {
+    "Weekly": "casual_tasks",
+    "Fortnightly": "casual_tasks",
+    "Monthly": "casual_tasks",
+    "Quaterly": "occasional_tasks",
+    "Yearly": "occasional_tasks"
+}
+
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
     print("This script requires Python 3.5 or higher!")
     print("You are using Python {}.{}.".format(
@@ -93,7 +101,8 @@ def init_data(dts: List[datetime]) -> Dict[str, object]:
         "date-human": d.strftime("%A, %d %B"),
         "weekday": d.isoweekday(),
         "events": [],
-        "casual_tasks": []
+        "casual_tasks": [],
+        "occasional_tasks": []
     }
         for d in dts}
     # Adds weekdays
@@ -182,7 +191,7 @@ def populate_regular_tasks(year: int, tasks: List, thisdata: Dict[str, object]) 
         if not "casual_tasks" in bucket:
             continue
         tasks_to_add =  shaped_tasks[j]
-        casual_tasks: List = bucket['casual_tasks']
+        casual_tasks: List = bucket[frequency_section_map[tasks[0]['Frequency']]]
         casual_tasks.extend(tasks_to_add)
 
 
