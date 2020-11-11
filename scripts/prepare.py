@@ -155,19 +155,35 @@ def populate_daily_tasks(year: int, tasks: List, thisdata: Dict[str, object]) ->
         casual_tasks: List = bucket['casual_tasks']
         casual_tasks.extend(daily_tasks)
 
+def create_array_shape(dim: int)->List:
+    results = []
+    for _ in range(dim):
+       results.append([])
+    return results
+
+def reshape_roughly(values: List, dim: int)->List:
+    results = create_array_shape(dim)
+    for i in range(len(values)):
+        j = i % dim
+        results[j].append(values[i])
+    return results
+
 def populate_regular_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
     if len(tasks) is 0:
         return
     regular_tasks = [create_task(t['Name'], t['Description'], t['Frequency']) for t in tasks]
     week_step = frequency_week_map[tasks[0]['Frequency']]
+    shaped_tasks = reshape_roughly(regular_tasks, week_step)
     monday_weekdays = thisdata['weekdays'][1]
-    dkeys = [ monday_weekdays[i] for i in range(0, len(monday_weekdays), week_step) ]
-    for k in dkeys:
+    for i in range(len(monday_weekdays)):
+        j = i % week_step
+        k = monday_weekdays[i]
         bucket = thisdata[k]
         if not "casual_tasks" in bucket:
             continue
+        tasks_to_add =  shaped_tasks[j]
         casual_tasks: List = bucket['casual_tasks']
-        casual_tasks.extend(regular_tasks)
+        casual_tasks.extend(tasks_to_add)
 
 
 def populate_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
@@ -177,6 +193,12 @@ def populate_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[
         year, [t for t in tasks if t['Frequency'] == "Weekly"], thisdata)
     populate_regular_tasks(
         year, [t for t in tasks if t['Frequency'] == "Fortnightly"], thisdata)
+    populate_regular_tasks(
+        year, [t for t in tasks if t['Frequency'] == "Monthly"], thisdata)
+    populate_regular_tasks(
+        year, [t for t in tasks if t['Frequency'] == "Quaterly"], thisdata)
+    populate_regular_tasks(
+        year, [t for t in tasks if t['Frequency'] == "Yearly"], thisdata)
 
 
 start_date = date_from_string("2020-11-01")
