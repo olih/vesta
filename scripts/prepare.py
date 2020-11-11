@@ -156,15 +156,18 @@ def populate_daily_tasks(year: int, tasks: List, thisdata: Dict[str, object]) ->
         casual_tasks.extend(daily_tasks)
 
 def populate_regular_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
-    weekly_tasks = [create_task(t['Name'], t['Description'], t['Frequency']) for t in tasks]
-    for k in thisdata:
+    if len(tasks) is 0:
+        return
+    regular_tasks = [create_task(t['Name'], t['Description'], t['Frequency']) for t in tasks]
+    week_step = frequency_week_map[tasks[0]['Frequency']]
+    monday_weekdays = thisdata['weekdays'][1]
+    dkeys = [ monday_weekdays[i] for i in range(0, len(monday_weekdays), week_step) ]
+    for k in dkeys:
         bucket = thisdata[k]
         if not "casual_tasks" in bucket:
             continue
-        if bucket['weekday'] is not 1:
-            continue
         casual_tasks: List = bucket['casual_tasks']
-        casual_tasks.extend(weekly_tasks)
+        casual_tasks.extend(regular_tasks)
 
 
 def populate_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
