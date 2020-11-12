@@ -43,7 +43,7 @@ frequency_week_map = {
     "Weekly": 1,
     "Fortnightly": 2,
     "Monthly": 4,
-    "Quaterly": 12,
+    "Quarterly": 12,
     "Yearly": 52
 }
 
@@ -80,6 +80,11 @@ def read_cooking() -> List:
 
 def read_ingredient() -> List:
     with open(import_data.get('ingredient'), newline='', encoding='utf-8-sig') as csvfile:
+        reader = csv.DictReader(csvfile)
+        return [row for row in reader]
+
+def read_shopping() -> List:
+    with open(import_data.get('shopping'), newline='', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
@@ -138,6 +143,11 @@ def create_event(name: str, description: str, flags: str):
             "flags": flags}
 
 def create_task(name: str, description: str, flags: str):
+    return {"id": name_to_id(name),
+            "description": description,
+            "flags": flags}
+
+def create_reg_shopping(name: str, description: str, flags: str):
     return {"id": name_to_id(name),
             "description": description,
             "flags": flags}
@@ -238,6 +248,35 @@ def populate_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[
     populate_regular_tasks(
         year, [t for t in tasks if t['Frequency'] == "Yearly"], thisdata)
 
+def populate_regular_shoppings(year: int, shoppings: List, thisdata: Dict[str, object]) -> Dict[str, object]:
+    if len(shoppings) is 0:
+        return
+    regular_shoppings = [create_reg_shopping(t['Name'], t['Description'], t['Frequency']) for t in shoppings]
+    week_step = frequency_week_map[shoppings[0]['Frequency']]
+    shaped_shoppings = reshape_roughly(regular_shoppings, week_step)
+    sunday_weekdays = thisdata['weekdays'][7]
+    for i in range(len(sunday_weekdays)):
+        j = i % week_step
+        k = sunday_weekdays[i]
+        bucket = thisdata[k]
+        if not "shopping" in bucket:
+            continue
+        shoppings_to_add =  sorted(shaped_shoppings[j], key=itemgetter('flags', 'description'))
+        shopping_basket: List = bucket['shopping']
+        shopping_basket.extend(shoppings_to_add)
+
+def populate_shoppings(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[str, object]:
+    populate_regular_shoppings(
+        year, [t for t in tasks if t['Frequency'] == "Daily"], thisdata)
+    populate_regular_shoppings(
+        year, [t for t in tasks if t['Frequency'] == "Weekly"], thisdata)
+    populate_regular_shoppings(
+        year, [t for t in tasks if t['Frequency'] == "Fortnightly"], thisdata)
+    populate_regular_shoppings(
+        year, [t for t in tasks if t['Frequency'] == "Monthly"], thisdata)
+    populate_regular_shoppings(
+        year, [t for t in tasks if t['Frequency'] == "Quaterly"], thisdata)
+
 def to_dict(values: List)->Dict:
     return { v["Name"]:v for v in values}
 
@@ -259,7 +298,9 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
             for shop_item in uniq_shopping_list:
                 shop_item['flags'] = shop_item['flags'] + f" q:{quantity[shop_item['id']]}"
             new_shopping_list = sorted(uniq_shopping_list, key=itemgetter('flags', 'description'))
-            bucket['shopping'] = new_shopping_list
+            shopping_basket: List = bucket['shopping']
+            shopping_basket.extend(new_shopping_list)
+            bucket['shopping'] = shopping_basket
             shopping_list = []
         
         # Manages meals
@@ -299,6 +340,7 @@ lastest_data = init_data(get_range_date(start_date, 500))
 populate_events(2020, read_events(), lastest_data)
 populate_events(2021, read_events(), lastest_data)
 populate_tasks(2020, read_household_tasks(), lastest_data)
+populate_shoppings(2020, read_shopping(), lastest_data)
 populate_meals(2020, read_cooking(), read_ingredient(), lastest_data)
 
 write_daily_alert(lastest_data)
