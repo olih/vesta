@@ -70,6 +70,15 @@ def read_household_tasks() -> List:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
+def read_cooking() -> List:
+    with open(import_data.get('cooking'), newline='', encoding='utf-8-sig') as csvfile:
+        reader = csv.DictReader(csvfile)
+        return [row for row in reader]
+
+def read_ingredient() -> List:
+    with open(import_data.get('ingredient'), newline='', encoding='utf-8-sig') as csvfile:
+        reader = csv.DictReader(csvfile)
+        return [row for row in reader]
 
 def write_daily_alert(items):
     for k in items:
