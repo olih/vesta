@@ -134,27 +134,27 @@ def init_data(dts: List[datetime]) -> Dict[str, object]:
 
 
 def name_to_id(name: str) -> str:
-    return non_std_chars_patt.sub("-", name.lower())
+    return non_std_chars_patt.sub("-", name.strip().lower())
 
 
 def create_event(name: str, description: str, flags: str):
     return {"id": name_to_id(name),
-            "description": description,
+            "description": description.strip().capitalize(),
             "flags": flags}
 
 def create_task(name: str, description: str, flags: str):
     return {"id": name_to_id(name),
-            "description": description,
+            "description": description.strip().capitalize(),
             "flags": flags}
 
 def create_reg_shopping(name: str, description: str, flags: str):
     return {"id": name_to_id(name),
-            "description": description,
+            "description": description.strip().capitalize(),
             "flags": flags}
 
 def create_meal(name: str, description: str, link: str, flags: str):
     return {"id": name_to_id(name),
-            "description": description,
+            "description": description.strip().capitalize(),
             "link": link,
             "flags": flags}
 
