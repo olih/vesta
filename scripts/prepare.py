@@ -7,6 +7,8 @@ import re
 from datetime import datetime, timedelta, date
 from typing import List, Tuple, Dict, Set
 from itertools import cycle
+from operator import itemgetter
+from collections import Counter
 
 config = configparser.ConfigParser()
 config.read(".vesta.ini")
@@ -251,7 +253,13 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
         weekday = bucket["weekday"]
         #Manages shopping list - shopping on Thursday and Sunday
         if weekday in [4, 7] and len(shopping_list) > 0:
-            bucket['shopping'] = shopping_list.copy()
+            quantity = Counter(map(itemgetter('id'), shopping_list))
+            used = set()
+            uniq_shopping_list = [i for i in shopping_list.copy() if i['id'] not in used and (used.add(i['id']) or True)]
+            for shop_item in uniq_shopping_list:
+                shop_item['flags'] = shop_item['flags'] + f" q:{quantity[shop_item['id']]}"
+            new_shopping_list = sorted(uniq_shopping_list, key=itemgetter('flags', 'description'))
+            bucket['shopping'] = new_shopping_list
             shopping_list = []
         
         # Manages meals
