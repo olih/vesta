@@ -6,6 +6,7 @@ import configparser
 import re
 from datetime import datetime, timedelta, date
 from typing import List, Tuple, Dict, Set
+from itertools import cycle
 
 config = configparser.ConfigParser()
 config.read(".vesta.ini")
@@ -111,7 +112,8 @@ def init_data(dts: List[datetime]) -> Dict[str, object]:
         "weekday": d.isoweekday(),
         "events": [],
         "casual_tasks": [],
-        "occasional_tasks": []
+        "occasional_tasks": [],
+        "shopping": [],
     }
         for d in dts}
     # Adds weekdays
@@ -138,6 +140,22 @@ def create_task(name: str, description: str, flags: str):
             "description": description,
             "flags": flags}
 
+def create_meal(name: str, description: str, link: str, flags: str):
+    return {"id": name_to_id(name),
+            "description": description,
+            "link": link,
+            "flags": flags}
+
+def create_shopping_ingredient(name: str, ingredient_dict: Dict[str, object]):
+    return {"id": name_to_id(name),
+            "description": ingredient_dict[name]['Description'],
+            "flags": ingredient_dict[name]['Food Type']
+            }
+
+def create_shopping_ingredients(ingredients: str, ingredient_dict: Dict[str, object])->List:
+    if not ingredients:
+        return []
+    return [create_shopping_ingredient(ingredient.strip(), ingredient_dict) for ingredient in ingredients.split(",")]
 
 def populate_events(year: int, events: List, thisdata: Dict[str, object]) -> Dict[str, object]:
     for event in events:
@@ -218,11 +236,61 @@ def populate_tasks(year: int, tasks: List, thisdata: Dict[str, object]) -> Dict[
     populate_regular_tasks(
         year, [t for t in tasks if t['Frequency'] == "Yearly"], thisdata)
 
+def to_dict(values: List)->Dict:
+    return { v["Name"]:v for v in values}
+
+def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[str, object]) -> Dict[str, object]:
+    pool_recipes = cycle(recipes)
+    map_ingredients = to_dict(ingredients)
+    prepared_meal = []
+    shopping_list = []
+    for k in thisdata:
+        bucket = thisdata[k]
+        if not "weekday" in bucket:
+            continue
+        weekday = bucket["weekday"]
+        #Manages shopping list - shopping on Thursday and Sunday
+        if weekday in [4, 7] and len(shopping_list) > 0:
+            bucket['shopping'] = shopping_list.copy()
+            shopping_list = []
+        
+        # Manages meals
+        if weekday in [1, 2, 3, 4, 5]:
+            lunch_ready = len(prepared_meal) > 0
+            lunch = next(pool_recipes) if not lunch_ready else prepared_meal.pop()
+            supper = next(pool_recipes)
+            preparation = weekday != 5
+            if preparation:
+                prepared_meal.append(supper)
+            lunch_flags = "prepared" if lunch_ready else "fresh"
+            supper_flags = "fresh x2" if preparation else "fresh"
+            bucket['lunch'] = create_meal(lunch['Name'], lunch['Description'], lunch['Link'], lunch_flags)
+            bucket['supper'] = create_meal(supper['Name'], supper['Description'], supper['Link'], supper_flags)
+            lunch_ingredients = create_shopping_ingredients(lunch['Ingredients'], map_ingredients)
+            supper_ingredients = create_shopping_ingredients(supper['Ingredients'], map_ingredients)
+            shopping_list.extend(lunch_ingredients)
+            shopping_list.extend(supper_ingredients)
+        else:
+            lunch_ready = len(prepared_meal) > 0
+            lunch = next(pool_recipes)
+            supper = next(pool_recipes)
+            preparation = weekday == 7
+            if preparation:
+                prepared_meal.append(supper)
+            lunch_flags = "prepared" if lunch_ready else "fresh"
+            supper_flags = "fresh x2" if preparation else "fresh"
+            bucket['lunch'] = create_meal(lunch['Name'], lunch['Description'], lunch['Link'], lunch_flags)
+            bucket['supper'] = create_meal(supper['Name'], supper['Description'], supper['Link'], supper_flags)
+            lunch_ingredients = create_shopping_ingredients(lunch['Ingredients'], map_ingredients)
+            supper_ingredients = create_shopping_ingredients(supper['Ingredients'], map_ingredients)
+            shopping_list.extend(lunch_ingredients)
+            shopping_list.extend(supper_ingredients)
 
 start_date = date_from_string("2020-11-01")
 lastest_data = init_data(get_range_date(start_date, 500))
 populate_events(2020, read_events(), lastest_data)
 populate_events(2021, read_events(), lastest_data)
 populate_tasks(2020, read_household_tasks(), lastest_data)
+populate_meals(2020, read_cooking(), read_ingredient(), lastest_data)
 
 write_daily_alert(lastest_data)
