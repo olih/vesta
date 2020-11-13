@@ -115,7 +115,7 @@ def get_range_date(base: datetime.date, numdays: int) -> List[datetime]:
 def init_data(dts: List[datetime]) -> Dict[str, object]:
     thisdata = {d.isoformat(): {
         "date": d.isoformat(),
-        "date-human": d.strftime("%A, %d %B"),
+        "date_human": d.strftime("%A, %d %B"),
         "weekday": d.isoweekday(),
         "events": [],
         "casual_tasks": [],
