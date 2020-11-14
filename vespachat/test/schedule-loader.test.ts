@@ -1,7 +1,7 @@
 import { loadSchedule } from '../src/lib/service/schedule-loader';
 
 test('load daily alert', async () => {
-  const schedule = await loadSchedule('test', '2020-11-01');
+  const schedule = await loadSchedule('test', '2020-11-01T16:53:06Z');
   expect(schedule.date).toEqual('2020-11-01');
   expect(schedule.date_human).toEqual('Sunday, 01 November');
   expect(schedule.events[0].id).toEqual('christmas');
