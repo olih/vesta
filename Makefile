@@ -5,9 +5,11 @@ prepare:
 	cd build;zip -r data.zip .
 
 test:
-	cd vespachat; yarn test
+	cd vestachat; yarn test
 
 build: test
-	rm -rf vespachat/dist
-	cd vespachat; yarn build
-	cd vespachat/dist;zip -r release.zip .
+	rm -rf vestachat/dist
+	cd vestachat; yarn build
+	cp vestachat/package.json vestachat/dist
+	cd vestachat/dist; yarn install --production
+	cd vestachat/dist;zip -r release.zip .

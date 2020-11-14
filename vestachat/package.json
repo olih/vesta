@@ -1,6 +1,6 @@
 {
   "name": "vestachat",
-  "description": "Chat application for home - Vespachat",
+  "description": "Chat application for home - vestachat",
   "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
@@ -36,14 +36,14 @@
     "trailingComma": "es5"
   },
   "author": "Olivier Huin",
-  "module": "dist/vespachat.esm.js",
+  "module": "dist/vestachat.esm.js",
   "size-limit": [
     {
-      "path": "dist/vespachat.cjs.production.min.js",
+      "path": "dist/vestachat.cjs.production.min.js",
       "limit": "10 KB"
     },
     {
-      "path": "dist/vespachat.esm.js",
+      "path": "dist/vestachat.esm.js",
       "limit": "10 KB"
     }
   ],
