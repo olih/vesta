@@ -47,6 +47,9 @@
       "limit": "10 KB"
     }
   ],
+  "jest": {
+    "testEnvironment": "node"
+  },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^4.7.0",
     "@types/aws-lambda": "^8.10.64",

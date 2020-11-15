@@ -1,5 +1,5 @@
 import { slackPostMessage } from '../src/lib/service/slackapp';
 
 test('load daily alert', async () => {
-    await slackPostMessage('general', "testing", [])
+    await slackPostMessage('#general', "testing", [])
 });
