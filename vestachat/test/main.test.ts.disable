@@ -1,0 +1,7 @@
+// import { slackPostMessage } from '../src/lib/service/slackapp';
+import { callweb} from '../src/lib/service/callweb';
+
+test('load daily alert', async () => {
+    // await slackPostMessage('#general', "testing", [])
+    await callweb()
+});
