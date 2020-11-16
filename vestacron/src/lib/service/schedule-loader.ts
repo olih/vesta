@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 import YAML from 'yaml'
+import { envConfig } from '../envconfig';
 
 import { Schedule } from '../model/schedule';
 
@@ -14,8 +15,6 @@ const loadSchedule: ScheduleLoader = async (
   return schedule;
 };
 
-const envReadDataDir: string = process.env.READ_DATA_DIR || 'data'
-
-const loadLocalSchedule = async (date: string) => loadSchedule(envReadDataDir, date)
+const loadLocalSchedule = async (date: string) => loadSchedule(envConfig.readDataDir, date)
 
 export { loadSchedule, loadLocalSchedule };

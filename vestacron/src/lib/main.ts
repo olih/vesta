@@ -1,4 +1,5 @@
 import { loadLocalSchedule } from './service/schedule-loader';
+import { publishSchedule } from './service/schedule-publisher';
 
 interface ServiceResponse {
   readonly body: string;
@@ -20,7 +21,12 @@ const handler: ServiceHandler = async (event: ServiceEvent) => {
     isBase64Encoded: false,
     statusCode: 200,
   };
-  const schedule = await loadLocalSchedule(event.time)
+  try {
+    const schedule = await loadLocalSchedule(event.time)
+    await publishSchedule(schedule)
+  } catch (error) {
+    console.error(error)
+  }
   return response;
 };
 
