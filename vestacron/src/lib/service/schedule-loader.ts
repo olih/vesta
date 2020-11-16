@@ -1,5 +1,7 @@
-import { Schedule } from '../model/schedule';
 const fs = require('fs').promises;
+import YAML from 'yaml'
+
+import { Schedule } from '../model/schedule';
 
 type ScheduleLoader = (readDataDir: string, date: string) => Promise<Schedule>;
 
@@ -7,8 +9,8 @@ const loadSchedule: ScheduleLoader = async (
   readDataDir: string,
   date: string
 ) => {
-  const content = await fs.readFile(`${readDataDir}/alert_${date.substring(0, 10)}.json`);
-  const schedule: Schedule = JSON.parse(content);
+  const content = await fs.readFile(`${readDataDir}/alert_${date.substring(0, 10)}.yaml`, 'utf8');
+  const schedule: Schedule = YAML.parse(content);
   return schedule;
 };
 
