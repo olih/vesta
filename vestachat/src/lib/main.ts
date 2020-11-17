@@ -1,8 +1,8 @@
 import { ErrorCode } from '@slack/web-api';
+import { Schedule } from './model/schedule';
 import { fromDailyMessage } from './msg/builder';
 import { fromSchedule } from './msg/daily';
 import { callweb } from './service/callweb';
-import { loadLocalSchedule } from './service/schedule-loader';
 import { slackPostMessage } from './service/slackapp';
 
 interface ServiceResponse {
@@ -16,8 +16,8 @@ const appMode: string = process.env.APP_MODE || ""
 type ServiceHandler = (event: any) => Promise<ServiceResponse>;
 
 interface ServiceEvent {
-  readonly source: string;
   readonly time: string;
+  readonly schedule: Schedule;
 }
 
 const checkWeb = async () => {
@@ -27,14 +27,12 @@ const checkWeb = async () => {
  await callweb()
 }
 
-const loadBlocks = async (timedata: string) => {
+const asBlocks = (schedule: Schedule) => {
   if (!appMode.includes("load")) {
-    return Promise.resolve([])
+    return []
   }
-  const schedule = await loadLocalSchedule(timedata)
   const daily = fromSchedule(schedule)
   const blocks = fromDailyMessage(daily)
-  console.log('blocks',blocks)
   return blocks
 }
 
@@ -53,16 +51,19 @@ const slackMessage = async (timedata: string, blocks: any[]) => {
   }
 
 }
+
+const createResponse = (body: string) => ({
+  body,
+  isBase64Encoded: false,
+  statusCode: 200,
+})
+
 const handler: ServiceHandler = async (event: ServiceEvent) => {
-  const response: ServiceResponse = {
-    body: `Daily update ${event.time}`,
-    isBase64Encoded: false,
-    statusCode: 200,
-  };
-  const blocks = await loadBlocks(event.time)
+  console.log('event', event)
+  const blocks = asBlocks(event.schedule)
   await checkWeb()
   await slackMessage(event.time, blocks)
-  return response;
+  return createResponse(`Daily update ${event.time}`);
 };
 
 export { handler };
