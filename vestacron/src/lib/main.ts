@@ -15,19 +15,21 @@ interface ServiceEvent {
   readonly time: string;
 }
 
+const createResponse = (body: string) => ({
+  body,
+  isBase64Encoded: false,
+  statusCode: 200,
+})
+
 const handler: ServiceHandler = async (event: ServiceEvent) => {
-  const response: ServiceResponse = {
-    body: `Schedule Daily update ${event.time}`,
-    isBase64Encoded: false,
-    statusCode: 200,
-  };
   try {
     const schedule = await loadLocalSchedule(event.time)
     await publishSchedule(schedule)
+    return createResponse(`Schedule Daily update ${event.time} on ${schedule.date_human}`)
   } catch (error) {
     console.error(error)
+    return createResponse(`Failed schedule daily update ${event.time}`)
   }
-  return response;
 };
 
 export { handler };
