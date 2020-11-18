@@ -1,5 +1,5 @@
 import { loadLocalSchedule } from './service/schedule-loader';
-import { publishSchedule } from './service/schedule-publisher';
+import { publishToTopic } from './service/schedule-publisher';
 
 interface ServiceResponse {
   readonly body: string;
@@ -24,7 +24,7 @@ const createResponse = (body: string) => ({
 const handler: ServiceHandler = async (event: ServiceEvent) => {
   try {
     const schedule = await loadLocalSchedule(event.time)
-    await publishSchedule(schedule)
+    await publishToTopic(schedule)
     return createResponse(`Schedule Daily update ${event.time} on ${schedule.date_human}`)
   } catch (error) {
     console.error(error)
