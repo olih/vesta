@@ -96,8 +96,8 @@ def read_shopping() -> List:
 def write_daily_alert(items):
     for k in items:
         content = items[k]
-        with open(f"{export_json}/alert_{k}.yaml", 'w') as outfile:
-            yaml.dump(content, outfile)
+        with open(f"{export_json}/alert_{k}.json", 'w') as outfile:
+            json.dump(content, outfile, indent=2)
 
 
 def date_from_string(value: str) -> datetime:

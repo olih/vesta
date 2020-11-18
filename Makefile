@@ -2,7 +2,7 @@ prepare:
 	rm -rf build
 	mkdir build
 	python scripts/prepare.py
-	cd build;zip -r data.zip .
+	aws s3 cp build s3://${S3_BUCKET}/vestacron --recursive
 
 buildchat:
 	cd vestachat; yarn test
