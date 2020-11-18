@@ -1,17 +1,22 @@
 import AWS from 'aws-sdk'
-import YAML from 'yaml'
-import { envConfig } from '../envconfig'
 import { Schedule } from '../model/schedule'
 
 const publishSchedule = async (schedule: Schedule) => {
-    const strSchedule = YAML.stringify(schedule)
-    const sns = new AWS.SNS();
+    const evtBridge = new AWS.EventBridge();
     var params = {
-        Message: strSchedule, 
-        Subject: `Schedule ${schedule.date_human}`,
-        TopicArn: envConfig.topicArn
+        Entries: [
+            {
+                Source: 'custom.olih.vestacron',
+                Detail: JSON.stringify(schedule),
+                DetailType: "vesta schedule event",
+                EventBusName: "vesta-event-bus",
+                Time: new Date()
+            }
+        ]
     };
-    await sns.publish(params);
+    const resp = await evtBridge.putEvents(params).promise();
+    console.log('publishSchedule', resp)
+    return resp
 }
 
 export { publishSchedule }
