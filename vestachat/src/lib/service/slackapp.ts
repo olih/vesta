@@ -5,7 +5,11 @@ const web = new WebClient(envConfig.slackBotToken, {
   logLevel: LogLevel.DEBUG,
 });
 
-const slackPostMessage = async (channel: string, text: string, blocks: any[]) => {
+const slackPostMessage = async (
+  channel: string,
+  text: string,
+  blocks: any[]
+) => {
   const result = await web.chat.postMessage({
     channel,
     text,

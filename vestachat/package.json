@@ -63,7 +63,6 @@
   },
   "dependencies": {
     "@slack/web-api": "^5.13.0",
-    "axios": "^0.21.0",
-    "yaml": "^1.10.0"
+    "axios": "^0.21.0"
   }
 }

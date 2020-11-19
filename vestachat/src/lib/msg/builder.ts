@@ -11,16 +11,16 @@ const fromDailyMessage = (msg: DailyMessage) => {
     createMarkdownSection(msg.lunch),
     createMarkdownSection(msg.supper),
   ];
-  if (msg.events) {
+  if (msg.events.length > 0) {
     blocks.push(createCheckboxes('Events', msg.events));
   }
-  if (msg.casual_tasks) {
+  if (msg.casual_tasks.length > 0) {
     blocks.push(createCheckboxes('Casual tasks', msg.casual_tasks));
   }
-  if (msg.occasional_tasks) {
+  if (msg.occasional_tasks.length > 0) {
     blocks.push(createCheckboxes('Occasional tasks', msg.occasional_tasks));
   }
-  if (msg.shopping) {
+  if (msg.shopping.length > 0) {
     blocks.push(createCheckboxes('Shopping', msg.shopping));
   }
   return blocks;

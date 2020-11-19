@@ -320,3 +320,6 @@ dist
 import-data/
 build/
 .vesta.ini
+
+*.p12
+*.pem
