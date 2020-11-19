@@ -24,6 +24,7 @@ const createResponse = (body: string) => ({
 
 const handler: ServiceHandler = async (event: ServiceEvent) => {
   try {
+    console.log('event', event)
     const schedule = await loadSchedule(event.time)
     await publishSchedule(schedule)
     return createResponse(`Schedule Daily update ${event.time} on ${schedule.date_human}`)
