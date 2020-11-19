@@ -1,6 +1,7 @@
 import { WebClient, LogLevel } from '@slack/web-api';
+import { envConfig } from '../envconfig';
 
-const web = new WebClient(process.env.SLACK_BOT_TOKEN, {
+const web = new WebClient(envConfig.slackBotToken, {
   logLevel: LogLevel.DEBUG,
 });
 

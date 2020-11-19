@@ -1,8 +1,8 @@
 import { ErrorCode } from '@slack/web-api';
+import { envConfig } from './envconfig';
 import { Schedule } from './model/schedule';
 import { fromDailyMessage } from './msg/builder';
 import { fromSchedule } from './msg/daily';
-import { callweb } from './service/callweb';
 import { slackPostMessage } from './service/slackapp';
 
 interface ServiceResponse {
@@ -11,24 +11,15 @@ interface ServiceResponse {
   readonly statusCode: number;
 }
 
-const appMode: string = process.env.APP_MODE || ""
-
 type ServiceHandler = (event: any) => Promise<ServiceResponse>;
 
 interface ServiceEvent {
   readonly time: string;
-  readonly schedule: Schedule;
-}
-
-const checkWeb = async () => {
-  if (!appMode.includes("check")) {
-    return Promise.resolve()
-  }
- await callweb()
+  readonly detail: Schedule;
 }
 
 const asBlocks = (schedule: Schedule) => {
-  if (!appMode.includes("load")) {
+  if (!envConfig.appMode.includes("load")) {
     return []
   }
   const daily = fromSchedule(schedule)
@@ -37,7 +28,7 @@ const asBlocks = (schedule: Schedule) => {
 }
 
 const slackMessage = async (timedata: string, blocks: any[]) => {
-  if (!appMode.includes("slack")) {
+  if (!envConfig.appMode.includes("slack")) {
     return Promise.resolve()
   }
   try {
@@ -60,8 +51,7 @@ const createResponse = (body: string) => ({
 
 const handler: ServiceHandler = async (event: ServiceEvent) => {
   console.log('event', event)
-  const blocks = asBlocks(event.schedule)
-  await checkWeb()
+  const blocks = asBlocks(event.detail)
   await slackMessage(event.time, blocks)
   return createResponse(`Daily update ${event.time}`);
 };

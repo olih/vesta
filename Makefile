@@ -4,6 +4,10 @@ prepare:
 	python scripts/prepare.py
 	aws s3 cp build s3://${S3_BUCKET}/vestacron --recursive
 
+test:
+	cd vestachat; yarn test
+	cd vestacron; yarn test
+
 buildchat:
 	cd vestachat; yarn test
 	rm -rf vestachat/dist
