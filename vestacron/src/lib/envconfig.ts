@@ -1,11 +1,11 @@
 interface EnvConfig {
-    readDataDir: string;
-    topicArn: string;
+    bucketName: string;
+    eventBusName: string;
 }
 
 const envConfig: EnvConfig = {
-    readDataDir: process.env.READ_DATA_DIR || '/data/read',
-    topicArn: process.env.TOPIC_ARN || 'arn:aws:sns:define-me'
+    bucketName: process.env.BUCKET_NAME || 'some-bucket-name',
+    eventBusName: process.env.EVT_BUS_NAME || 'evt-bus-name'
 }
 
 export {envConfig}

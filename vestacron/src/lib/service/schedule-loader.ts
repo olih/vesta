@@ -1,20 +1,23 @@
-const fs = require('fs').promises;
-import YAML from 'yaml'
+import AWS from 'aws-sdk';
 import { envConfig } from '../envconfig';
 
 import { Schedule } from '../model/schedule';
 
-type ScheduleLoader = (readDataDir: string, date: string) => Promise<Schedule>;
+type ScheduleLoader = (date: string) => Promise<Schedule>;
+
+const s3 = new AWS.S3();
 
 const loadSchedule: ScheduleLoader = async (
-  readDataDir: string,
   date: string
 ) => {
-  const content = await fs.readFile(`${readDataDir}/alert_${date.substring(0, 10)}.yaml`, 'utf8');
-  const schedule: Schedule = YAML.parse(content);
+  const params = {
+    Bucket: envConfig.bucketName,
+    Key: `vestacron/alert_${date.substring(0, 10)}.json`
+  };
+  const resp = await s3.getObject(params).promise()
+  const content = resp.Body === undefined ? "{}" : resp.Body.toString();
+  const schedule: Schedule = JSON.parse(content);
   return schedule;
 };
 
-const loadLocalSchedule = async (date: string) => loadSchedule(envConfig.readDataDir, date)
-
-export { loadSchedule, loadLocalSchedule };
+export { loadSchedule };
