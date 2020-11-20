@@ -370,12 +370,15 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
             shopping_list.extend(supper_ingredients)
 
 
-start_date = date_from_string("2020-11-01")
+start_date = date_from_string("2020-11-22")
 lastest_data = init_data(get_range_date(start_date, 500))
 populate_events(2020, read_events(), lastest_data)
 populate_events(2021, read_events(), lastest_data)
 populate_tasks(2020, read_household_tasks(), lastest_data)
+populate_tasks(2021, read_household_tasks(), lastest_data)
 populate_shoppings(2020, read_shopping(), lastest_data)
+populate_shoppings(2021, read_shopping(), lastest_data)
 populate_meals(2020, read_cooking(), read_ingredient(), lastest_data)
+populate_meals(2021, read_cooking(), read_ingredient(), lastest_data)
 
 write_daily_alert(lastest_data)
