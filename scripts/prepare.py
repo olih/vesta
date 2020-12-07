@@ -388,9 +388,18 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
             preview_meal.append(supper['Description'])
 
 
+def as_singular_word(word:str)->str:
+    if word.endswith('oes'):
+        return word[:-2]
+    elif word.endswith('s'):
+        return word[:-1]
+    else:
+        return word
+
 def enhance_word(emoji_list: List[str], word: str)->str:
-    if word.lower() in emoji_list:
-        return f"{word} :{word.lower()}:"
+    root_word = as_singular_word(word.lower())
+    if root_word in emoji_list:
+        return f"{word} :{root_word}:"
     else:
         return word
 
