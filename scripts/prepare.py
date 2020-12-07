@@ -92,6 +92,10 @@ def read_shopping() -> List:
         reader = csv.DictReader(csvfile)
         return [row for row in reader]
 
+def read_emoji() -> List[str]:
+    with open(import_data.get('emoji'), encoding='utf-8-sig') as f:
+        lines = f.readlines()
+        return [line.strip() for line in lines if len(line)>3]
 
 def write_daily_alert(items):
     for k in items:
@@ -126,6 +130,7 @@ def init_data(dts: List[datetime]) -> Dict[str, object]:
         "casual_tasks": [],
         "occasional_tasks": [],
         "shopping": [],
+        "info": []
     }
         for d in dts}
     # Adds weekdays
@@ -240,7 +245,7 @@ def populate_regular_tasks(year: int, tasks: List, thisdata: Dict[str, object]) 
         t['Name'], t['Description'], t['Frequency']) for t in tasks]
     week_step = frequency_week_map[tasks[0]['Frequency']]
     shaped_tasks = reshape_roughly(regular_tasks, week_step)
-    monday_weekdays = thisdata['weekdays'][1]
+    monday_weekdays = [d for d in thisdata['weekdays'][1] if d.startswith(str(year))]
     for i in range(len(monday_weekdays)):
         j = i % week_step
         k = monday_weekdays[i]
@@ -274,7 +279,7 @@ def populate_regular_shoppings(year: int, shoppings: List, thisdata: Dict[str, o
         t['Name'], t['Description'], t['Frequency']) for t in shoppings]
     week_step = frequency_week_map[shoppings[0]['Frequency']]
     shaped_shoppings = reshape_roughly(regular_shoppings, week_step)
-    sunday_weekdays = thisdata['weekdays'][7]
+    sunday_weekdays = [d for d in thisdata['weekdays'][7] if d.startswith(str(year))]
     for i in range(len(sunday_weekdays)):
         j = i % week_step
         k = sunday_weekdays[i]
@@ -309,9 +314,12 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
     map_ingredients = to_dict(ingredients)
     prepared_meal = []
     shopping_list = []
+    preview_meal = []
     for k in thisdata:
         bucket = thisdata[k]
         if not "weekday" in bucket:
+            continue
+        if not bucket["date"].startswith(str(year)):
             continue
         weekday = bucket["weekday"]
         # Manages shopping list - shopping on Thursday and Sunday
@@ -329,6 +337,10 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
             shopping_basket.extend(new_shopping_list)
             bucket['shopping'] = shopping_basket
             shopping_list = []
+            info_list: List = bucket['info']
+            uniq_meals = sorted(list(set(preview_meal)))
+            info_list.append("Future meals: "+ ", ".join(uniq_meals))
+            preview_meal = []
 
         # Manages meals
         if weekday in [1, 2, 3, 4, 5]:
@@ -351,6 +363,8 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
                 supper['Ingredients'], map_ingredients)
             shopping_list.extend(lunch_ingredients)
             shopping_list.extend(supper_ingredients)
+            preview_meal.append(lunch['Description'])
+            preview_meal.append(supper['Description'])
         else:
             lunch_ready = len(prepared_meal) > 0
             lunch = next(pool_recipes)
@@ -370,7 +384,53 @@ def populate_meals(year: int, recipes: List, ingredients: List, thisdata: Dict[s
                 supper['Ingredients'], map_ingredients)
             shopping_list.extend(lunch_ingredients)
             shopping_list.extend(supper_ingredients)
+            preview_meal.append(lunch['Description'])
+            preview_meal.append(supper['Description'])
 
+
+def enhance_word(emoji_list: List[str], word: str)->str:
+    if word.lower() in emoji_list:
+        return f"{word} :{word.lower()}:"
+    else:
+        return word
+
+def enhance_with_emoji(emoji_list: List[str], line: str):
+    words = line.split(" ")
+    enhanced_words = [enhance_word(emoji_list, w) for w in words]
+    return " ".join(enhanced_words)
+
+def possibly_enhance_description_with_emoji(emoji_list: List[str], k: str, value):
+    if k == "description":
+        return enhance_with_emoji(emoji_list, value)
+    else:
+        return value
+
+# Cannot iterate and modify dict at the same time, so rebuilding dict
+def enhance_description(emoji_list: List[str], value):
+    return { k: possibly_enhance_description_with_emoji(emoji_list, k, value[k]) for k in value.keys() }
+
+
+def enhance_alerts(emoji_list: List[str], thisdata: Dict[str, object]):
+    cloneddata = thisdata.copy()
+    for k in cloneddata:
+        bucket = cloneddata[k]
+        if not "weekday" in bucket:
+            continue
+        if "events" in bucket:
+            events = [enhance_description(emoji_list, v) for v in bucket["events"]]
+            thisdata[k]["events"] = events
+        
+        if "casual_tasks" in bucket:
+            casual_tasks = [enhance_description(emoji_list, v) for v in bucket["casual_tasks"]]
+            thisdata[k]["casual_tasks"] = casual_tasks
+        
+        if "occasional_tasks" in bucket:
+            occasional_tasks = [enhance_description(emoji_list, v) for v in bucket["occasional_tasks"]]
+            thisdata[k]["occasional_tasks"] = occasional_tasks
+
+        if "shopping" in bucket:
+            shopping = [enhance_description(emoji_list, v) for v in bucket["shopping"]]
+            thisdata[k]["shopping"] = shopping
 
 start_date = date_from_string("2020-11-22")
 lastest_data = init_data(get_range_date(start_date, 500))
@@ -383,5 +443,7 @@ def populate_year(year:int):
   
 populate_year(2020)
 populate_year(2021)
+
+enhance_alerts(read_emoji(), lastest_data)
 
 write_daily_alert(lastest_data)
