@@ -21,6 +21,9 @@ const fromDailyMessage = (msg: DailyMessage) => {
     createMarkdownSection(msg.lunch),
     createMarkdownSection(msg.supper),
   ];
+  if (msg.info.length > 0) {
+    blocks.push(createMarkdownSection(msg.info))
+  }
   if (msg.events.length > 0) {
     chunk(msg.events, 10).forEach(group =>
       blocks.push(createCheckboxes('Events', group))

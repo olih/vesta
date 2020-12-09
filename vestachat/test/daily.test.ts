@@ -25,6 +25,7 @@ test('Convert from schedule', () => {
     events: [createTask(4, '')],
     lunch: createRecipe(10, ''),
     supper: createRecipe(11, ''),
+    info: ["Meal A this week"]
   };
   const expectedMsg: DailyMessage = {
     title: 'Today Nov 10',
@@ -54,6 +55,7 @@ test('Convert from schedule', () => {
         value: 'id-4',
       },
     ],
+    info: "*Info*: Meal A this week"
   };
 
   const expectedBlocks = [
@@ -77,6 +79,13 @@ test('Convert from schedule', () => {
       text: {
         type: 'mrkdwn',
         text: '*Supper*: Recipe 11\n<http://website.com/11|supper recipe>',
+      },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '*Info*: Meal A this week',
       },
     },
     {
@@ -176,6 +185,7 @@ test('Convert from schedule with empty parts', () => {
     events: [createTask(4, '')],
     lunch: createRecipe(10, ''),
     supper: createRecipe(11, ''),
+    info: []
   };
   const expectedMsg: DailyMessage = {
     title: 'Today Nov 10',
@@ -195,6 +205,7 @@ test('Convert from schedule with empty parts', () => {
         value: 'id-4',
       },
     ],
+    info: ""
   };
 
   const expectedBlocks = [
@@ -278,11 +289,13 @@ test('Convert from schedule with  more than 10 items', () => {
     events: [],
     lunch: createRecipe(10, ''),
     supper: createRecipe(11, ''),
+    info: []
   };
   const expectedMsg: DailyMessage = {
     title: 'Today Nov 10',
     lunch: '*Lunch*: Recipe 10\n<http://website.com/10|lunch recipe>',
     supper: '*Supper*: Recipe 11\n<http://website.com/11|supper recipe>',
+    info: "",
     casual_tasks: [
       {
         title: 'description 1 _Daily_',
