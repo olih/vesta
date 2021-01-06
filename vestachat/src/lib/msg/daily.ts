@@ -6,6 +6,7 @@ interface DailyMessage {
   readonly title: string;
   readonly lunch: string;
   readonly supper: string;
+  readonly info: string;
   readonly casual_tasks: SlackOption[];
   readonly occasional_tasks: SlackOption[];
   readonly shopping: SlackOption[];
@@ -32,6 +33,7 @@ const fromSchedule: ScheduleToDailyMessage = (schedule: Schedule) => ({
   title: `Today ${schedule.date_human}`,
   lunch: `*Lunch*: ${schedule.lunch.description}\n<${schedule.lunch.link}|lunch recipe>`,
   supper: `*Supper*: ${schedule.supper.description}\n<${schedule.supper.link}|supper recipe>`,
+  info: schedule.info.length>0 ? `*Info*: ${schedule.info.join('\n')}`: '',
   casual_tasks: schedule.casual_tasks.map(toTaskOption),
   occasional_tasks: schedule.occasional_tasks.map(toTaskOption),
   shopping: schedule.shopping.map(toTaskOption),

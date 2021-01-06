@@ -10,7 +10,6 @@ interface Schedule {
   shopping: Task[];
   lunch: Recipe;
   supper: Recipe;
-  info: string[];
 }
 
 export { Schedule };
